@@ -1,48 +1,42 @@
 
-import { Toaster } from "@/components/ui/toaster";
-import { Toaster as Sonner } from "@/components/ui/sonner";
-import { TooltipProvider } from "@/components/ui/tooltip";
-import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { BrowserRouter, Routes, Route } from "react-router-dom";
-import { AnimatePresence } from "framer-motion";
-import Index from "./pages/Index";
-import Clients from "./pages/Clients";
-import Resellers from "./pages/Resellers";
-import Inventory from "./pages/Inventory";
-import Sales from "./pages/Sales";
-import Settings from "./pages/Settings";
-import NotFound from "./pages/NotFound";
-import Navbar from "./components/layout/Navbar";
-import PageTransition from "./components/layout/PageTransition";
+import React, { lazy, Suspense } from 'react';
+import { BrowserRouter, Routes, Route } from 'react-router-dom';
+import './App.css';
+import Navbar from './components/layout/Navbar';
+import { Toaster } from './components/ui/toaster';
+import PageTransition from './components/layout/PageTransition';
 
-// Add framer-motion dependency
-import { motion } from "framer-motion";
+// Lazy-load pages
+const Index = lazy(() => import('./pages/Index'));
+const Clients = lazy(() => import('./pages/Clients'));
+const Resellers = lazy(() => import('./pages/Resellers'));
+const Inventory = lazy(() => import('./pages/Inventory'));
+const Sales = lazy(() => import('./pages/Sales'));
+const Settings = lazy(() => import('./pages/Settings'));
+const Expenses = lazy(() => import('./pages/Expenses'));
+const NotFound = lazy(() => import('./pages/NotFound'));
 
-const queryClient = new QueryClient();
-
-const App = () => (
-  <QueryClientProvider client={queryClient}>
-    <TooltipProvider>
+function App() {
+  return (
+    <BrowserRouter>
+      <Navbar />
+      <PageTransition>
+        <Suspense fallback={<div className="flex justify-center items-center min-h-screen">Carregando...</div>}>
+          <Routes>
+            <Route path="/" element={<Index />} />
+            <Route path="/clients" element={<Clients />} />
+            <Route path="/resellers" element={<Resellers />} />
+            <Route path="/inventory" element={<Inventory />} />
+            <Route path="/sales" element={<Sales />} />
+            <Route path="/expenses" element={<Expenses />} />
+            <Route path="/settings" element={<Settings />} />
+            <Route path="*" element={<NotFound />} />
+          </Routes>
+        </Suspense>
+      </PageTransition>
       <Toaster />
-      <Sonner />
-      <BrowserRouter>
-        <Navbar />
-        <main className="relative">
-          <PageTransition>
-            <Routes>
-              <Route path="/" element={<Index />} />
-              <Route path="/clients" element={<Clients />} />
-              <Route path="/resellers" element={<Resellers />} />
-              <Route path="/inventory" element={<Inventory />} />
-              <Route path="/sales" element={<Sales />} />
-              <Route path="/settings" element={<Settings />} />
-              <Route path="*" element={<NotFound />} />
-            </Routes>
-          </PageTransition>
-        </main>
-      </BrowserRouter>
-    </TooltipProvider>
-  </QueryClientProvider>
-);
+    </BrowserRouter>
+  );
+}
 
 export default App;

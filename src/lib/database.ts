@@ -42,6 +42,15 @@ export interface Sale {
   date: Date;
 }
 
+export interface Expense {
+  id: string;
+  itemName: string;
+  quantity: number;
+  unitCost: number;
+  totalCost: number;
+  date: Date;
+}
+
 // Mock data
 const clients: Client[] = [
   { id: '1', name: 'Ana Silva', phone: '(11) 99999-1234', paymentDate: new Date(2023, 10, 15), createdAt: new Date('2023-10-15') },
@@ -128,6 +137,49 @@ const sales: Sale[] = [
     ],
     totalAmount: 110.00,
     date: new Date('2024-03-25')
+  }
+];
+
+const expenses: Expense[] = [
+  {
+    id: '1',
+    itemName: 'Chocolate em Barra',
+    quantity: 20,
+    unitCost: 8.5,
+    totalCost: 170,
+    date: new Date('2024-03-05')
+  },
+  {
+    id: '2',
+    itemName: 'Açúcar',
+    quantity: 15,
+    unitCost: 4.2,
+    totalCost: 63,
+    date: new Date('2024-03-07')
+  },
+  {
+    id: '3',
+    itemName: 'Nozes',
+    quantity: 5,
+    unitCost: 25,
+    totalCost: 125,
+    date: new Date('2024-03-10')
+  },
+  {
+    id: '4',
+    itemName: 'Manteiga',
+    quantity: 10,
+    unitCost: 7.5,
+    totalCost: 75,
+    date: new Date('2024-03-15')
+  },
+  {
+    id: '5',
+    itemName: 'Farinha',
+    quantity: 25,
+    unitCost: 3.8,
+    totalCost: 95,
+    date: new Date('2024-03-20')
   }
 ];
 
@@ -243,6 +295,35 @@ export const db = {
     return newSale;
   },
   
+  // Expenses
+  getExpenses: () => [...expenses],
+  getExpense: (id: string) => expenses.find(expense => expense.id === id),
+  addExpense: (expense: Omit<Expense, 'id'>) => {
+    const newExpense = {
+      ...expense,
+      id: (expenses.length + 1).toString()
+    };
+    expenses.push(newExpense);
+    return newExpense;
+  },
+  updateExpense: (id: string, data: Partial<Omit<Expense, 'id'>>) => {
+    const index = expenses.findIndex(expense => expense.id === id);
+    if (index >= 0) {
+      expenses[index] = { ...expenses[index], ...data };
+      return expenses[index];
+    }
+    return null;
+  },
+  deleteExpense: (id: string) => {
+    const index = expenses.findIndex(expense => expense.id === id);
+    if (index >= 0) {
+      const deletedExpense = expenses[index];
+      expenses.splice(index, 1);
+      return deletedExpense;
+    }
+    return null;
+  },
+  
   // Dashboard data
   getDashboardData: () => {
     const today = new Date();
@@ -256,6 +337,17 @@ export const db = {
     });
     
     const monthlyRevenue = monthlySales.reduce((sum, sale) => sum + sale.totalAmount, 0);
+    
+    // Monthly expenses
+    const monthlyExpenses = expenses.filter(expense => {
+      const expenseDate = new Date(expense.date);
+      return expenseDate.getMonth() === currentMonth && expenseDate.getFullYear() === currentYear;
+    });
+    
+    const monthlyExpensesTotal = monthlyExpenses.reduce((sum, expense) => sum + expense.totalCost, 0);
+    
+    // Calculate profit
+    const monthlyProfit = monthlyRevenue - monthlyExpensesTotal;
     
     // Low stock products (less than 20 units)
     const lowStockProducts = products.filter(product => product.quantity < 20);
@@ -305,6 +397,11 @@ export const db = {
       .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())
       .slice(0, 5);
       
+    // Recent expenses
+    const recentExpenses = [...expenses]
+      .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())
+      .slice(0, 5);
+      
     return {
       totalSales: sales.length,
       totalRevenue: sales.reduce((sum, sale) => sum + sale.totalAmount, 0),
@@ -312,10 +409,13 @@ export const db = {
       totalResellers: resellers.length,
       monthlyRevenue,
       monthlySales: monthlySales.length,
+      monthlyExpensesTotal,
+      monthlyProfit,
       lowStockProducts,
       topProducts,
       topResellers,
-      recentSales
+      recentSales,
+      recentExpenses
     };
   }
 };

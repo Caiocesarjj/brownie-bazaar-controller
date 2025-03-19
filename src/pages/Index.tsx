@@ -4,10 +4,12 @@ import { motion } from 'framer-motion';
 import DashboardCard from '@/components/dashboard/DashboardCard';
 import { db } from '@/lib/database';
 import { 
-  Users, UserRound, Package, DollarSign, TrendingUp, ShoppingBag
+  Users, UserRound, Package, DollarSign, TrendingUp, ShoppingBag, 
+  CreditCard, PiggyBank
 } from 'lucide-react';
 import RecentSales from '@/components/dashboard/RecentSales';
 import StockStatus from '@/components/dashboard/StockStatus';
+import ExpenseSummary from '@/components/dashboard/ExpenseSummary';
 import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 
 const Index = () => {
@@ -76,6 +78,27 @@ const Index = () => {
           />
         </div>
 
+        {/* Profit Cards */}
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-6 mb-8">
+          <DashboardCard 
+            title="Despesas do Mês"
+            value={formatCurrency(dashboardData.monthlyExpensesTotal)}
+            icon={<CreditCard size={20} className="text-primary" />}
+          />
+          <DashboardCard 
+            title="Lucro do Mês"
+            value={formatCurrency(dashboardData.monthlyProfit)}
+            icon={<PiggyBank size={20} className="text-primary" />}
+            trend={dashboardData.monthlyProfit > 0 ? "up" : "down"}
+            trendValue={`${dashboardData.monthlyProfit > 0 ? '+' : ''}${Math.round((dashboardData.monthlyProfit / dashboardData.monthlyRevenue) * 100)}%`}
+          />
+          <DashboardCard 
+            title="Margem de Lucro"
+            value={`${Math.round((dashboardData.monthlyProfit / dashboardData.monthlyRevenue) * 100)}%`}
+            icon={<TrendingUp size={20} className="text-primary" />}
+          />
+        </div>
+
         {/* Chart */}
         <motion.div
           initial={{ opacity: 0, y: 20 }}
@@ -130,21 +153,31 @@ const Index = () => {
           </div>
         </motion.div>
 
-        {/* Recent Sales and Stock Status */}
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+        {/* Recent Sales, Stock Status, and Expense Summary */}
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
           <motion.div
             initial={{ opacity: 0, x: -20 }}
             animate={{ opacity: 1, x: 0 }}
             transition={{ duration: 0.5, delay: 0.3 }}
+            className="lg:col-span-1"
           >
             <RecentSales sales={dashboardData.recentSales} />
           </motion.div>
           <motion.div
-            initial={{ opacity: 0, x: 20 }}
-            animate={{ opacity: 1, x: 0 }}
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.5, delay: 0.4 }}
+            className="lg:col-span-1"
           >
             <StockStatus products={dashboardData.lowStockProducts} />
+          </motion.div>
+          <motion.div
+            initial={{ opacity: 0, x: 20 }}
+            animate={{ opacity: 1, x: 0 }}
+            transition={{ duration: 0.5, delay: 0.5 }}
+            className="lg:col-span-1"
+          >
+            <ExpenseSummary expenses={dashboardData.recentExpenses} />
           </motion.div>
         </div>
       </div>
