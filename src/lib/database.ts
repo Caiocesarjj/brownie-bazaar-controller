@@ -52,6 +52,15 @@ export interface Expense {
   date: Date;
 }
 
+export interface User {
+  id: string;
+  username: string;
+  password: string; // Na vida real, isso seria um hash, não senha em texto puro
+  name: string;
+  role: 'admin' | 'user';
+  createdAt: Date;
+}
+
 // Mock data
 const clients: Client[] = [
   { id: '1', name: 'Ana Silva', phone: '(11) 99999-1234', paymentDate: new Date(2023, 10, 15), createdAt: new Date('2023-10-15') },
@@ -181,6 +190,25 @@ const expenses: Expense[] = [
     unitCost: 3.8,
     totalCost: 95,
     date: new Date('2024-03-20')
+  }
+];
+
+const users: User[] = [
+  {
+    id: '1',
+    username: 'admin',
+    password: 'admin123', // Em produção, usaríamos hashing de senha
+    name: 'Administrador',
+    role: 'admin',
+    createdAt: new Date('2024-01-01')
+  },
+  {
+    id: '2',
+    username: 'vendedor1',
+    password: 'senha123',
+    name: 'Vendedor Exemplo',
+    role: 'user',
+    createdAt: new Date('2024-02-01')
   }
 ];
 
@@ -321,6 +349,42 @@ export const db = {
       const deletedExpense = expenses[index];
       expenses.splice(index, 1);
       return deletedExpense;
+    }
+    return null;
+  },
+  
+  // Authentication
+  authenticateUser: (username: string, password: string) => {
+    const user = users.find(u => u.username === username && u.password === password);
+    return user || null;
+  },
+  
+  // Users
+  getUsers: () => [...users].filter(u => u.role !== 'admin'), // Don't expose admin users
+  getUser: (id: string) => users.find(user => user.id === id),
+  addUser: (user: Omit<User, 'id' | 'createdAt'>) => {
+    const newUser = {
+      ...user,
+      id: (users.length + 1).toString(),
+      createdAt: new Date()
+    };
+    users.push(newUser);
+    return newUser;
+  },
+  updateUser: (id: string, data: Partial<Omit<User, 'id' | 'createdAt'>>) => {
+    const index = users.findIndex(user => user.id === id);
+    if (index >= 0) {
+      users[index] = { ...users[index], ...data };
+      return users[index];
+    }
+    return null;
+  },
+  deleteUser: (id: string) => {
+    const index = users.findIndex(user => user.id === id);
+    if (index >= 0) {
+      const deletedUser = users[index];
+      users.splice(index, 1);
+      return deletedUser;
     }
     return null;
   },
