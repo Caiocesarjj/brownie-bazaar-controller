@@ -65,7 +65,13 @@ const AddProductForm: React.FC<AddProductFormProps> = ({
           description: `${data.name} foi atualizado com sucesso.`,
         });
       } else {
-        db.addProduct(data);
+        // Make sure we have all required properties for the product
+        const productData = {
+          name: data.name,
+          quantity: data.quantity,
+          unitPrice: data.unitPrice
+        };
+        db.addProduct(productData);
         toast({
           title: "Produto adicionado",
           description: `${data.name} foi adicionado com sucesso.`,

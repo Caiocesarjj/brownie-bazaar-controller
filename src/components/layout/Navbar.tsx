@@ -9,7 +9,7 @@ import {
   Menu, X, Settings
 } from 'lucide-react';
 import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet';
-import useMobile from '@/hooks/use-mobile';
+import { useIsMobile } from '@/hooks/use-mobile';
 
 interface NavItem {
   href: string;
@@ -28,7 +28,7 @@ const navItems: NavItem[] = [
 
 const Navbar = () => {
   const location = useLocation();
-  const isMobile = useMobile();
+  const isMobile = useIsMobile();
   const [isOpen, setIsOpen] = useState(false);
   const [logo, setLogo] = useState<string | null>(null);
   const [companyName, setCompanyName] = useState('Sistema de Brownies');

@@ -62,7 +62,12 @@ const AddClientForm: React.FC<AddClientFormProps> = ({
           description: `${data.name} foi atualizado com sucesso.`,
         });
       } else {
-        db.addClient(data);
+        // Make sure we have all required properties for the client
+        const clientData = {
+          name: data.name,
+          phone: data.phone
+        };
+        db.addClient(clientData);
         toast({
           title: "Cliente adicionado",
           description: `${data.name} foi adicionado com sucesso.`,
