@@ -1,11 +1,152 @@
-// Update this page (the content is just a fallback if you fail to update the page)
+
+import React, { useEffect } from 'react';
+import { motion } from 'framer-motion';
+import DashboardCard from '@/components/dashboard/DashboardCard';
+import { db } from '@/lib/database';
+import { 
+  Users, UserRound, Package, DollarSign, TrendingUp, ShoppingBag
+} from 'lucide-react';
+import RecentSales from '@/components/dashboard/RecentSales';
+import StockStatus from '@/components/dashboard/StockStatus';
+import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 
 const Index = () => {
+  const [dashboardData, setDashboardData] = React.useState(() => db.getDashboardData());
+
+  const formatCurrency = (value: number) => {
+    return new Intl.NumberFormat('pt-BR', {
+      style: 'currency',
+      currency: 'BRL'
+    }).format(value);
+  };
+
+  // Sample data for the chart
+  const salesData = [
+    { name: 'Jan', value: 4000 },
+    { name: 'Fev', value: 3000 },
+    { name: 'Mar', value: 5000 },
+    { name: 'Abr', value: 2780 },
+    { name: 'Mai', value: 1890 },
+    { name: 'Jun', value: 2390 },
+    { name: 'Jul', value: 3490 },
+  ];
+
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gray-100">
-      <div className="text-center">
-        <h1 className="text-4xl font-bold mb-4">Welcome to Your Blank App</h1>
-        <p className="text-xl text-gray-600">Start building your amazing project here!</p>
+    <div className="min-h-screen bg-gradient-to-br from-background to-secondary/30 py-10 px-6">
+      <div className="max-w-7xl mx-auto">
+        <motion.div
+          initial={{ opacity: 0, y: -20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.5 }}
+          className="mb-8"
+        >
+          <h1 className="text-3xl font-bold tracking-tight">Dashboard</h1>
+          <p className="text-muted-foreground mt-2">
+            Bem-vindo ao seu sistema de controle de vendas de brownies.
+          </p>
+        </motion.div>
+
+        {/* Stats Cards */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+          <DashboardCard 
+            title="Total de Clientes"
+            value={dashboardData.totalClients}
+            icon={<Users size={20} className="text-primary" />}
+            trend="up"
+            trendValue="+12.5%"
+          />
+          <DashboardCard 
+            title="Total de Revendedores"
+            value={dashboardData.totalResellers}
+            icon={<UserRound size={20} className="text-primary" />}
+          />
+          <DashboardCard 
+            title="Vendas do Mês"
+            value={dashboardData.monthlySales}
+            icon={<ShoppingBag size={20} className="text-primary" />}
+            trend="up"
+            trendValue="+18.2%"
+          />
+          <DashboardCard 
+            title="Receita do Mês"
+            value={formatCurrency(dashboardData.monthlyRevenue)}
+            icon={<DollarSign size={20} className="text-primary" />}
+            trend="up"
+            trendValue="+22.5%"
+          />
+        </div>
+
+        {/* Chart */}
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.5, delay: 0.2 }}
+          className="glass-effect rounded-xl p-6 mb-8"
+        >
+          <h3 className="text-lg font-medium mb-4">Visão Geral de Vendas</h3>
+          <div className="h-80">
+            <ResponsiveContainer width="100%" height="100%">
+              <AreaChart
+                data={salesData}
+                margin={{ top: 20, right: 30, left: 0, bottom: 0 }}
+              >
+                <defs>
+                  <linearGradient id="colorValue" x1="0" y1="0" x2="0" y2="1">
+                    <stop offset="5%" stopColor="hsl(var(--primary))" stopOpacity={0.35} />
+                    <stop offset="95%" stopColor="hsl(var(--primary))" stopOpacity={0} />
+                  </linearGradient>
+                </defs>
+                <CartesianGrid strokeDasharray="3 3" vertical={false} strokeOpacity={0.2} />
+                <XAxis 
+                  dataKey="name" 
+                  axisLine={false} 
+                  tickLine={false} 
+                  tick={{ fill: 'hsl(var(--muted-foreground))' }} 
+                />
+                <YAxis 
+                  axisLine={false}
+                  tickLine={false}
+                  tick={{ fill: 'hsl(var(--muted-foreground))' }}
+                  tickFormatter={(value) => `R$${value}`}
+                />
+                <Tooltip 
+                  formatter={(value) => [`R$${value}`, 'Vendas']}
+                  contentStyle={{ 
+                    backgroundColor: 'hsl(var(--background))', 
+                    borderColor: 'hsl(var(--border))',
+                    borderRadius: '0.5rem'
+                  }}
+                />
+                <Area 
+                  type="monotone" 
+                  dataKey="value" 
+                  stroke="hsl(var(--primary))" 
+                  strokeWidth={2}
+                  fillOpacity={1}
+                  fill="url(#colorValue)" 
+                />
+              </AreaChart>
+            </ResponsiveContainer>
+          </div>
+        </motion.div>
+
+        {/* Recent Sales and Stock Status */}
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+          <motion.div
+            initial={{ opacity: 0, x: -20 }}
+            animate={{ opacity: 1, x: 0 }}
+            transition={{ duration: 0.5, delay: 0.3 }}
+          >
+            <RecentSales sales={dashboardData.recentSales} />
+          </motion.div>
+          <motion.div
+            initial={{ opacity: 0, x: 20 }}
+            animate={{ opacity: 1, x: 0 }}
+            transition={{ duration: 0.5, delay: 0.4 }}
+          >
+            <StockStatus products={dashboardData.lowStockProducts} />
+          </motion.div>
+        </div>
       </div>
     </div>
   );
