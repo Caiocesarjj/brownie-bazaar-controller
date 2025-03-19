@@ -4,15 +4,15 @@ import { motion } from 'framer-motion';
 import { db, Product } from '@/lib/database';
 import { 
   Search, Plus, Trash2, Edit, ChevronLeft, ChevronRight, 
-  Package, CheckCircle, XCircle, DollarSign, Archive 
+  CheckCircle, XCircle 
 } from 'lucide-react';
-import AnimatedInput from '@/components/common/AnimatedInput';
 import GlassCard from '@/components/common/GlassCard';
 import { Button } from '@/components/ui/button';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { toast } from '@/components/ui/use-toast';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
+import AddProductForm from '@/components/forms/AddProductForm';
 
 const Inventory = () => {
   const [products, setProducts] = useState<Product[]>(db.getProducts());
@@ -20,14 +20,7 @@ const Inventory = () => {
   const [isAddProductDialogOpen, setIsAddProductDialogOpen] = useState(false);
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
   const [productToDelete, setProductToDelete] = useState<Product | null>(null);
-  const [isEditMode, setIsEditMode] = useState(false);
   const [currentProduct, setCurrentProduct] = useState<Product | null>(null);
-  
-  // Form state
-  const [name, setName] = useState('');
-  const [quantity, setQuantity] = useState('');
-  const [unitPrice, setUnitPrice] = useState('');
-  const [errors, setErrors] = useState<Record<string, string>>({});
 
   const filteredProducts = products.filter(product => 
     product.name.toLowerCase().includes(searchTerm.toLowerCase())
@@ -35,103 +28,17 @@ const Inventory = () => {
 
   const openAddProductDialog = () => {
     setIsAddProductDialogOpen(true);
-    setIsEditMode(false);
     setCurrentProduct(null);
-    resetForm();
   };
 
   const openEditProductDialog = (product: Product) => {
     setCurrentProduct(product);
-    setName(product.name);
-    setQuantity(product.quantity.toString());
-    setUnitPrice(product.unitPrice.toString());
-    setIsEditMode(true);
     setIsAddProductDialogOpen(true);
-  };
-
-  const resetForm = () => {
-    setName('');
-    setQuantity('');
-    setUnitPrice('');
-    setErrors({});
   };
 
   const openDeleteDialog = (product: Product) => {
     setProductToDelete(product);
     setIsDeleteDialogOpen(true);
-  };
-
-  const validateForm = () => {
-    const newErrors: Record<string, string> = {};
-    
-    if (!name.trim()) {
-      newErrors.name = 'O nome é obrigatório';
-    }
-    
-    if (!quantity.trim()) {
-      newErrors.quantity = 'A quantidade é obrigatória';
-    } else {
-      const quantityValue = parseInt(quantity);
-      if (isNaN(quantityValue) || quantityValue < 0) {
-        newErrors.quantity = 'A quantidade deve ser um número positivo';
-      }
-    }
-    
-    if (!unitPrice.trim()) {
-      newErrors.unitPrice = 'O preço unitário é obrigatório';
-    } else {
-      const priceValue = parseFloat(unitPrice);
-      if (isNaN(priceValue) || priceValue <= 0) {
-        newErrors.unitPrice = 'O preço unitário deve ser maior que zero';
-      }
-    }
-    
-    setErrors(newErrors);
-    return Object.keys(newErrors).length === 0;
-  };
-
-  const handleSubmit = () => {
-    if (!validateForm()) return;
-    
-    try {
-      const quantityValue = parseInt(quantity);
-      const priceValue = parseFloat(unitPrice);
-      
-      if (isEditMode && currentProduct) {
-        // Update existing product
-        db.updateProduct(currentProduct.id, { 
-          name, 
-          quantity: quantityValue,
-          unitPrice: priceValue
-        });
-        setProducts(db.getProducts());
-        toast({
-          title: "Produto atualizado",
-          description: `${name} foi atualizado com sucesso.`,
-        });
-      } else {
-        // Add new product
-        db.addProduct({ 
-          name, 
-          quantity: quantityValue,
-          unitPrice: priceValue
-        });
-        setProducts(db.getProducts());
-        toast({
-          title: "Produto adicionado",
-          description: `${name} foi adicionado com sucesso.`,
-        });
-      }
-      
-      setIsAddProductDialogOpen(false);
-      resetForm();
-    } catch (error) {
-      toast({
-        title: "Erro",
-        description: "Ocorreu um erro ao processar sua solicitação.",
-        variant: "destructive",
-      });
-    }
   };
 
   const handleDeleteProduct = () => {
@@ -153,6 +60,11 @@ const Inventory = () => {
         });
       }
     }
+  };
+
+  const handleFormSuccess = () => {
+    setProducts(db.getProducts());
+    setIsAddProductDialogOpen(false);
   };
 
   const formatCurrency = (value: number) => {
@@ -302,67 +214,14 @@ const Inventory = () => {
         <DialogContent>
           <DialogHeader>
             <DialogTitle>
-              {isEditMode ? 'Editar Produto' : 'Adicionar Produto'}
+              {currentProduct ? 'Editar Produto' : 'Adicionar Produto'}
             </DialogTitle>
           </DialogHeader>
           
-          <div className="space-y-4 py-4">
-            <div className="flex items-center justify-center mb-6">
-              <div className="h-16 w-16 rounded-full bg-primary/10 flex items-center justify-center">
-                <Package size={32} className="text-primary" />
-              </div>
-            </div>
-            
-            <AnimatedInput
-              id="name"
-              label="Nome do Produto"
-              value={name}
-              onChange={(e) => setName(e.target.value)}
-              error={errors.name}
-            />
-            
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div className="relative">
-                <AnimatedInput
-                  id="quantity"
-                  label="Quantidade"
-                  type="number"
-                  min="0"
-                  value={quantity}
-                  onChange={(e) => setQuantity(e.target.value)}
-                  error={errors.quantity}
-                />
-                <div className="absolute right-3 top-1/2 transform -translate-y-1/2 text-muted-foreground">
-                  <Archive size={16} />
-                </div>
-              </div>
-              
-              <div className="relative">
-                <AnimatedInput
-                  id="unitPrice"
-                  label="Preço Unitário"
-                  type="number"
-                  min="0"
-                  step="0.01"
-                  value={unitPrice}
-                  onChange={(e) => setUnitPrice(e.target.value)}
-                  error={errors.unitPrice}
-                />
-                <div className="absolute right-3 top-1/2 transform -translate-y-1/2 text-muted-foreground">
-                  <DollarSign size={16} />
-                </div>
-              </div>
-            </div>
-          </div>
-          
-          <DialogFooter>
-            <Button variant="outline" onClick={() => setIsAddProductDialogOpen(false)}>
-              Cancelar
-            </Button>
-            <Button onClick={handleSubmit}>
-              {isEditMode ? 'Salvar Alterações' : 'Adicionar Produto'}
-            </Button>
-          </DialogFooter>
+          <AddProductForm 
+            onSuccess={handleFormSuccess}
+            productToEdit={currentProduct}
+          />
         </DialogContent>
       </Dialog>
 

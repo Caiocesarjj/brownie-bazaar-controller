@@ -10,6 +10,7 @@ import Clients from "./pages/Clients";
 import Resellers from "./pages/Resellers";
 import Inventory from "./pages/Inventory";
 import Sales from "./pages/Sales";
+import Settings from "./pages/Settings";
 import NotFound from "./pages/NotFound";
 import Navbar from "./components/layout/Navbar";
 import PageTransition from "./components/layout/PageTransition";
@@ -34,6 +35,7 @@ const App = () => (
               <Route path="/resellers" element={<Resellers />} />
               <Route path="/inventory" element={<Inventory />} />
               <Route path="/sales" element={<Sales />} />
+              <Route path="/settings" element={<Settings />} />
               <Route path="*" element={<NotFound />} />
             </Routes>
           </PageTransition>

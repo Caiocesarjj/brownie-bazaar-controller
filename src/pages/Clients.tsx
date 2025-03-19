@@ -4,15 +4,15 @@ import { motion } from 'framer-motion';
 import { db, Client } from '@/lib/database';
 import { 
   Search, Plus, Trash2, Edit, ChevronLeft, ChevronRight, 
-  UserRound, CheckCircle, XCircle 
+  CheckCircle, XCircle 
 } from 'lucide-react';
-import AnimatedInput from '@/components/common/AnimatedInput';
 import GlassCard from '@/components/common/GlassCard';
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
 import { toast } from '@/components/ui/use-toast';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
+import AddClientForm from '@/components/forms/AddClientForm';
 
 const Clients = () => {
   const [clients, setClients] = useState<Client[]>(db.getClients());
@@ -20,14 +20,8 @@ const Clients = () => {
   const [isAddClientDialogOpen, setIsAddClientDialogOpen] = useState(false);
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
   const [clientToDelete, setClientToDelete] = useState<Client | null>(null);
-  const [isEditMode, setIsEditMode] = useState(false);
   const [currentClient, setCurrentClient] = useState<Client | null>(null);
   
-  // Form state
-  const [name, setName] = useState('');
-  const [phone, setPhone] = useState('');
-  const [errors, setErrors] = useState<Record<string, string>>({});
-
   const filteredClients = clients.filter(client => 
     client.name.toLowerCase().includes(searchTerm.toLowerCase()) || 
     client.phone.includes(searchTerm)
@@ -35,78 +29,17 @@ const Clients = () => {
 
   const openAddClientDialog = () => {
     setIsAddClientDialogOpen(true);
-    setIsEditMode(false);
     setCurrentClient(null);
-    resetForm();
   };
 
   const openEditClientDialog = (client: Client) => {
     setCurrentClient(client);
-    setName(client.name);
-    setPhone(client.phone);
-    setIsEditMode(true);
     setIsAddClientDialogOpen(true);
-  };
-
-  const resetForm = () => {
-    setName('');
-    setPhone('');
-    setErrors({});
   };
 
   const openDeleteDialog = (client: Client) => {
     setClientToDelete(client);
     setIsDeleteDialogOpen(true);
-  };
-
-  const validateForm = () => {
-    const newErrors: Record<string, string> = {};
-    
-    if (!name.trim()) {
-      newErrors.name = 'O nome é obrigatório';
-    }
-    
-    if (!phone.trim()) {
-      newErrors.phone = 'O telefone é obrigatório';
-    } else if (!/^[\d\s()-]+$/.test(phone)) {
-      newErrors.phone = 'Formato de telefone inválido';
-    }
-    
-    setErrors(newErrors);
-    return Object.keys(newErrors).length === 0;
-  };
-
-  const handleSubmit = () => {
-    if (!validateForm()) return;
-    
-    try {
-      if (isEditMode && currentClient) {
-        // Update existing client
-        db.updateClient(currentClient.id, { name, phone });
-        setClients(db.getClients());
-        toast({
-          title: "Cliente atualizado",
-          description: `${name} foi atualizado com sucesso.`,
-        });
-      } else {
-        // Add new client
-        db.addClient({ name, phone });
-        setClients(db.getClients());
-        toast({
-          title: "Cliente adicionado",
-          description: `${name} foi adicionado com sucesso.`,
-        });
-      }
-      
-      setIsAddClientDialogOpen(false);
-      resetForm();
-    } catch (error) {
-      toast({
-        title: "Erro",
-        description: "Ocorreu um erro ao processar sua solicitação.",
-        variant: "destructive",
-      });
-    }
   };
 
   const handleDeleteClient = () => {
@@ -128,6 +61,11 @@ const Clients = () => {
         });
       }
     }
+  };
+
+  const handleFormSuccess = () => {
+    setClients(db.getClients());
+    setIsAddClientDialogOpen(false);
   };
 
   return (
@@ -255,42 +193,14 @@ const Clients = () => {
         <DialogContent>
           <DialogHeader>
             <DialogTitle>
-              {isEditMode ? 'Editar Cliente' : 'Adicionar Cliente'}
+              {currentClient ? 'Editar Cliente' : 'Adicionar Cliente'}
             </DialogTitle>
           </DialogHeader>
           
-          <div className="space-y-4 py-4">
-            <div className="flex items-center justify-center mb-6">
-              <div className="h-16 w-16 rounded-full bg-primary/10 flex items-center justify-center">
-                <UserRound size={32} className="text-primary" />
-              </div>
-            </div>
-            
-            <AnimatedInput
-              id="name"
-              label="Nome"
-              value={name}
-              onChange={(e) => setName(e.target.value)}
-              error={errors.name}
-            />
-            
-            <AnimatedInput
-              id="phone"
-              label="Telefone"
-              value={phone}
-              onChange={(e) => setPhone(e.target.value)}
-              error={errors.phone}
-            />
-          </div>
-          
-          <DialogFooter>
-            <Button variant="outline" onClick={() => setIsAddClientDialogOpen(false)}>
-              Cancelar
-            </Button>
-            <Button onClick={handleSubmit}>
-              {isEditMode ? 'Salvar Alterações' : 'Adicionar Cliente'}
-            </Button>
-          </DialogFooter>
+          <AddClientForm 
+            onSuccess={handleFormSuccess}
+            clientToEdit={currentClient}
+          />
         </DialogContent>
       </Dialog>
 
