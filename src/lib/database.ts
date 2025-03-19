@@ -1,4 +1,3 @@
-
 // Mock database for the brownie sales system
 // This would be replaced with actual SQLite or other database in a real app
 
@@ -7,6 +6,7 @@ export interface Client {
   id: string;
   name: string;
   phone: string;
+  paymentDate?: Date;
   createdAt: Date;
 }
 
@@ -44,11 +44,11 @@ export interface Sale {
 
 // Mock data
 const clients: Client[] = [
-  { id: '1', name: 'Ana Silva', phone: '(11) 99999-1234', createdAt: new Date('2023-10-15') },
+  { id: '1', name: 'Ana Silva', phone: '(11) 99999-1234', paymentDate: new Date(2023, 10, 15), createdAt: new Date('2023-10-15') },
   { id: '2', name: 'Carlos Oliveira', phone: '(11) 98765-4321', createdAt: new Date('2023-11-05') },
-  { id: '3', name: 'Mariana Costa', phone: '(11) 97777-8888', createdAt: new Date('2023-12-10') },
+  { id: '3', name: 'Mariana Costa', phone: '(11) 97777-8888', paymentDate: new Date(2023, 12, 10), createdAt: new Date('2023-12-10') },
   { id: '4', name: 'João Pereira', phone: '(11) 96666-5555', createdAt: new Date('2024-01-20') },
-  { id: '5', name: 'Juliana Santos', phone: '(11) 95555-4444', createdAt: new Date('2024-02-08') },
+  { id: '5', name: 'Juliana Santos', phone: '(11) 95555-4444', paymentDate: new Date(2024, 2, 10), createdAt: new Date('2024-02-08') },
 ];
 
 const resellers: Reseller[] = [
