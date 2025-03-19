@@ -23,6 +23,7 @@ export interface Product {
   name: string;
   quantity: number;
   unitPrice: number;
+  costPrice: number;  // Novo campo: preço de custo
   createdAt: Date;
 }
 
@@ -67,11 +68,11 @@ const resellers: Reseller[] = [
 ];
 
 const products: Product[] = [
-  { id: '1', name: 'Brownie Tradicional', quantity: 45, unitPrice: 8.50, createdAt: new Date('2023-10-01') },
-  { id: '2', name: 'Brownie com Nozes', quantity: 30, unitPrice: 10.00, createdAt: new Date('2023-10-01') },
-  { id: '3', name: 'Brownie Recheado', quantity: 25, unitPrice: 12.50, createdAt: new Date('2023-11-15') },
-  { id: '4', name: 'Brownie Vegano', quantity: 15, unitPrice: 14.00, createdAt: new Date('2024-01-10') },
-  { id: '5', name: 'Brownie Zero Açúcar', quantity: 18, unitPrice: 15.00, createdAt: new Date('2024-02-05') },
+  { id: '1', name: 'Brownie Tradicional', quantity: 45, unitPrice: 8.50, costPrice: 3.20, createdAt: new Date('2023-10-01') },
+  { id: '2', name: 'Brownie com Nozes', quantity: 30, unitPrice: 10.00, costPrice: 4.50, createdAt: new Date('2023-10-01') },
+  { id: '3', name: 'Brownie Recheado', quantity: 25, unitPrice: 12.50, costPrice: 5.30, createdAt: new Date('2023-11-15') },
+  { id: '4', name: 'Brownie Vegano', quantity: 15, unitPrice: 14.00, costPrice: 6.80, createdAt: new Date('2024-01-10') },
+  { id: '5', name: 'Brownie Zero Açúcar', quantity: 18, unitPrice: 15.00, costPrice: 7.20, createdAt: new Date('2024-02-05') },
 ];
 
 const sales: Sale[] = [

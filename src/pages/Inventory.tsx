@@ -4,7 +4,7 @@ import { motion } from 'framer-motion';
 import { db, Product } from '@/lib/database';
 import { 
   Search, Plus, Trash2, Edit, ChevronLeft, ChevronRight, 
-  CheckCircle, XCircle 
+  CheckCircle, XCircle, TrendingUp
 } from 'lucide-react';
 import GlassCard from '@/components/common/GlassCard';
 import { Button } from '@/components/ui/button';
@@ -74,6 +74,15 @@ const Inventory = () => {
     }).format(value);
   };
 
+  const calculateProfit = (unitPrice: number, costPrice: number) => {
+    const profit = unitPrice - costPrice;
+    const profitMargin = (profit / unitPrice) * 100;
+    return {
+      profit,
+      profitMargin
+    };
+  };
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-background to-secondary/30 py-10 px-6">
       <div className="max-w-7xl mx-auto">
@@ -125,8 +134,10 @@ const Inventory = () => {
                   <tr className="border-b">
                     <th className="px-4 py-3 text-left text-sm font-medium text-muted-foreground">Nome</th>
                     <th className="px-4 py-3 text-left text-sm font-medium text-muted-foreground">Quantidade</th>
-                    <th className="px-4 py-3 text-left text-sm font-medium text-muted-foreground">Preço Unitário</th>
-                    <th className="px-4 py-3 text-left text-sm font-medium text-muted-foreground">Data de Cadastro</th>
+                    <th className="px-4 py-3 text-left text-sm font-medium text-muted-foreground">Preço de Custo</th>
+                    <th className="px-4 py-3 text-left text-sm font-medium text-muted-foreground">Preço de Venda</th>
+                    <th className="px-4 py-3 text-left text-sm font-medium text-muted-foreground">Lucro</th>
+                    <th className="px-4 py-3 text-left text-sm font-medium text-muted-foreground">Margem %</th>
                     <th className="px-4 py-3 text-left text-sm font-medium text-muted-foreground">Status</th>
                     <th className="px-4 py-3 text-right text-sm font-medium text-muted-foreground">Ações</th>
                   </tr>
@@ -134,58 +145,66 @@ const Inventory = () => {
                 <tbody className="divide-y">
                   {filteredProducts.length === 0 ? (
                     <tr>
-                      <td colSpan={6} className="px-4 py-6 text-center text-muted-foreground">
+                      <td colSpan={8} className="px-4 py-6 text-center text-muted-foreground">
                         Nenhum produto encontrado.
                       </td>
                     </tr>
                   ) : (
-                    filteredProducts.map((product) => (
-                      <motion.tr 
-                        key={product.id}
-                        initial={{ opacity: 0 }}
-                        animate={{ opacity: 1 }}
-                        exit={{ opacity: 0 }}
-                        transition={{ duration: 0.3 }}
-                        className="hover:bg-muted/20 transition-colors"
-                      >
-                        <td className="px-4 py-3">{product.name}</td>
-                        <td className="px-4 py-3">{product.quantity} unidades</td>
-                        <td className="px-4 py-3">{formatCurrency(product.unitPrice)}</td>
-                        <td className="px-4 py-3 text-muted-foreground">
-                          {format(new Date(product.createdAt), "dd 'de' MMMM 'de' yyyy", { locale: ptBR })}
-                        </td>
-                        <td className="px-4 py-3">
-                          <div className={`
-                            inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium
-                            ${product.quantity > 20 ? 'bg-green-100 text-green-800' : 
-                              product.quantity > 5 ? 'bg-yellow-100 text-yellow-800' : 
-                              'bg-red-100 text-red-800'}
-                          `}>
-                            {product.quantity > 20 ? 'Normal' : 
-                             product.quantity > 5 ? 'Baixo' : 
-                             'Crítico'}
-                          </div>
-                        </td>
-                        <td className="px-4 py-3 text-right">
-                          <div className="flex justify-end space-x-2">
-                            <Button 
-                              variant="ghost" 
-                              size="icon"
-                              onClick={() => openEditProductDialog(product)}
-                            >
-                              <Edit size={16} className="text-muted-foreground" />
-                            </Button>
-                            <Button 
-                              variant="ghost" 
-                              size="icon"
-                              onClick={() => openDeleteDialog(product)}
-                            >
-                              <Trash2 size={16} className="text-destructive" />
-                            </Button>
-                          </div>
-                        </td>
-                      </motion.tr>
-                    ))
+                    filteredProducts.map((product) => {
+                      const { profit, profitMargin } = calculateProfit(product.unitPrice, product.costPrice);
+                      return (
+                        <motion.tr 
+                          key={product.id}
+                          initial={{ opacity: 0 }}
+                          animate={{ opacity: 1 }}
+                          exit={{ opacity: 0 }}
+                          transition={{ duration: 0.3 }}
+                          className="hover:bg-muted/20 transition-colors"
+                        >
+                          <td className="px-4 py-3">{product.name}</td>
+                          <td className="px-4 py-3">{product.quantity} unidades</td>
+                          <td className="px-4 py-3">{formatCurrency(product.costPrice)}</td>
+                          <td className="px-4 py-3">{formatCurrency(product.unitPrice)}</td>
+                          <td className="px-4 py-3">{formatCurrency(profit)}</td>
+                          <td className="px-4 py-3">
+                            <div className="flex items-center">
+                              <TrendingUp size={16} className={profitMargin > 30 ? "text-green-500 mr-1" : "text-amber-500 mr-1"} />
+                              {profitMargin.toFixed(2)}%
+                            </div>
+                          </td>
+                          <td className="px-4 py-3">
+                            <div className={`
+                              inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium
+                              ${product.quantity > 20 ? 'bg-green-100 text-green-800' : 
+                                product.quantity > 5 ? 'bg-yellow-100 text-yellow-800' : 
+                                'bg-red-100 text-red-800'}
+                            `}>
+                              {product.quantity > 20 ? 'Normal' : 
+                               product.quantity > 5 ? 'Baixo' : 
+                               'Crítico'}
+                            </div>
+                          </td>
+                          <td className="px-4 py-3 text-right">
+                            <div className="flex justify-end space-x-2">
+                              <Button 
+                                variant="ghost" 
+                                size="icon"
+                                onClick={() => openEditProductDialog(product)}
+                              >
+                                <Edit size={16} className="text-muted-foreground" />
+                              </Button>
+                              <Button 
+                                variant="ghost" 
+                                size="icon"
+                                onClick={() => openDeleteDialog(product)}
+                              >
+                                <Trash2 size={16} className="text-destructive" />
+                              </Button>
+                            </div>
+                          </td>
+                        </motion.tr>
+                      );
+                    })
                   )}
                 </tbody>
               </table>
