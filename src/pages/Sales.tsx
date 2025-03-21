@@ -1,5 +1,4 @@
-
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { motion } from 'framer-motion';
 import { db, Sale, Client, Reseller, Product } from '@/lib/database';
 import { 
@@ -41,7 +40,6 @@ const Sales = () => {
   const [isSaleDetailsDialogOpen, setIsSaleDetailsDialogOpen] = useState(false);
   const [selectedSale, setSelectedSale] = useState<Sale | null>(null);
 
-  // New sale form state
   const [selectedClientId, setSelectedClientId] = useState("");
   const [selectedResellerId, setSelectedResellerId] = useState("");
   const [saleItems, setSaleItems] = useState<SaleItem[]>([]);
@@ -97,10 +95,8 @@ const Sales = () => {
       return;
     }
 
-    // Check if product already in cart
     const existingItemIndex = saleItems.findIndex(item => item.productId === currentProductId);
     if (existingItemIndex >= 0) {
-      // Update existing item
       const updatedItems = [...saleItems];
       const newQuantity = updatedItems[existingItemIndex].quantity + currentQuantity;
       
@@ -117,7 +113,6 @@ const Sales = () => {
       
       setSaleItems(updatedItems);
     } else {
-      // Add new item
       setSaleItems([
         ...saleItems,
         {
@@ -130,7 +125,6 @@ const Sales = () => {
       ]);
     }
 
-    // Reset selection
     setCurrentProductId("");
     setCurrentQuantity(1);
     setErrors({});
@@ -141,7 +135,6 @@ const Sales = () => {
   };
 
   const handleSubmitSale = async () => {
-    // Validate form
     const newErrors: Record<string, string> = {};
     
     if (!selectedClientId) {
@@ -161,10 +154,8 @@ const Sales = () => {
       return;
     }
     
-    // Calculate total
     const totalAmount = saleItems.reduce((sum, item) => sum + item.subtotal, 0);
     
-    // Find client and reseller
     const client = clients.find(c => c.id === selectedClientId);
     const reseller = resellers.find(r => r.id === selectedResellerId);
     
@@ -177,7 +168,6 @@ const Sales = () => {
       return;
     }
 
-    // Create sale
     try {
       const newSale: Omit<Sale, 'id'> = {
         clientId: client.id,
@@ -196,7 +186,7 @@ const Sales = () => {
       
       await db.addSale(newSale);
       await refreshSales();
-      await refreshProducts(); // Update products after inventory change
+      await refreshProducts();
       
       toast({
         title: "Venda registrada",
@@ -214,7 +204,6 @@ const Sales = () => {
     }
   };
 
-  // Filter available products (with stock)
   const availableProducts = products.filter(product => product.quantity > 0);
 
   if (loading) {
@@ -249,7 +238,6 @@ const Sales = () => {
           </Button>
         </motion.div>
 
-        {/* Search and Filters */}
         <GlassCard className="mb-8 p-4">
           <div className="relative">
             <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground h-4 w-4" />
@@ -263,7 +251,6 @@ const Sales = () => {
           </div>
         </GlassCard>
 
-        {/* Sales Table */}
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
@@ -326,7 +313,6 @@ const Sales = () => {
               </table>
             </div>
             
-            {/* Pagination */}
             <div className="flex items-center justify-between px-4 py-4 border-t">
               <div className="text-sm text-muted-foreground">
                 Mostrando {filteredSales.length} de {filteredSales.length} vendas
@@ -344,7 +330,6 @@ const Sales = () => {
         </motion.div>
       </div>
 
-      {/* Add Sale Dialog */}
       <Dialog open={isAddSaleDialogOpen} onOpenChange={setIsAddSaleDialogOpen}>
         <DialogContent className="sm:max-w-[600px]">
           <DialogHeader>
@@ -361,7 +346,6 @@ const Sales = () => {
               </div>
             </div>
             
-            {/* Client and Reseller Selection */}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
                 <label className="text-sm font-medium mb-1.5 block">Cliente</label>
@@ -398,7 +382,6 @@ const Sales = () => {
               </div>
             </div>
             
-            {/* Product Selection */}
             <div className="border-t pt-4">
               <div className="grid grid-cols-1 md:grid-cols-[1fr,100px] gap-4 mb-4">
                 <div>
@@ -450,7 +433,6 @@ const Sales = () => {
               {errors.items && <p className="text-xs text-destructive mt-1">{errors.items}</p>}
             </div>
             
-            {/* Sale Items */}
             <div className="border rounded-md overflow-hidden">
               <div className="bg-muted/40 px-4 py-2.5 border-b">
                 <h4 className="font-medium text-sm">Itens da Venda</h4>
@@ -509,7 +491,6 @@ const Sales = () => {
         </DialogContent>
       </Dialog>
 
-      {/* Sale Details Dialog */}
       <Dialog open={isSaleDetailsDialogOpen} onOpenChange={setIsSaleDetailsDialogOpen}>
         <DialogContent className="sm:max-w-[550px]">
           <DialogHeader>

@@ -1,5 +1,4 @@
-
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { motion } from 'framer-motion';
 import { db, Expense } from '@/lib/database';
 import {
@@ -31,33 +30,13 @@ import {
   AlertDialogTitle,
 } from '@/components/ui/alert-dialog';
 import { toast } from '@/components/ui/use-toast';
+import { useAsyncData } from '@/lib/utils/AsyncDataHelper';
 
 const Expenses = () => {
-  const [expenses, setExpenses] = useState<Expense[]>([]);
+  const { data: expenses = [], loading, refetch: refreshExpenses } = useAsyncData<Expense[]>(() => db.getExpenses());
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [selectedExpense, setSelectedExpense] = useState<Expense | null>(null);
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
-  const [loading, setLoading] = useState(true);
-
-  useEffect(() => {
-    const fetchExpenses = async () => {
-      try {
-        const data = await db.getExpenses();
-        setExpenses(data);
-      } catch (error) {
-        console.error("Error fetching expenses:", error);
-        toast({
-          title: "Erro ao carregar despesas",
-          description: "Não foi possível carregar as despesas.",
-          variant: "destructive"
-        });
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    fetchExpenses();
-  }, []);
 
   const formatCurrency = (value: number) => {
     return new Intl.NumberFormat('pt-BR', {
@@ -89,8 +68,7 @@ const Expenses = () => {
     if (selectedExpense) {
       try {
         await db.deleteExpense(selectedExpense.id);
-        const updatedExpenses = await db.getExpenses();
-        setExpenses(updatedExpenses);
+        await refreshExpenses();
         toast({
           title: "Despesa excluída",
           description: `${selectedExpense.itemName} foi excluído com sucesso.`,
@@ -103,16 +81,6 @@ const Expenses = () => {
           variant: "destructive"
         });
       }
-    }
-  };
-
-  const refreshExpenses = async () => {
-    try {
-      const data = await db.getExpenses();
-      setExpenses(data);
-      setIsDialogOpen(false);
-    } catch (error) {
-      console.error("Error refreshing expenses:", error);
     }
   };
 
@@ -202,7 +170,6 @@ const Expenses = () => {
         </Table>
       </motion.div>
 
-      {/* Add/Edit Dialog */}
       <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
         <DialogContent className="sm:max-w-[500px]">
           <DialogHeader>
@@ -217,7 +184,6 @@ const Expenses = () => {
         </DialogContent>
       </Dialog>
 
-      {/* Delete Confirmation Dialog */}
       <AlertDialog open={isDeleteDialogOpen} onOpenChange={setIsDeleteDialogOpen}>
         <AlertDialogContent>
           <AlertDialogHeader>

@@ -1,5 +1,4 @@
-
-import React, { useState, useEffect } from 'react';
+import React from 'react';
 import { motion } from 'framer-motion';
 import DashboardCard from '@/components/dashboard/DashboardCard';
 import { db } from '@/lib/database';
@@ -12,25 +11,10 @@ import StockStatus from '@/components/dashboard/StockStatus';
 import ExpenseSummary from '@/components/dashboard/ExpenseSummary';
 import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 import { DashboardData } from '@/lib/database/models';
+import { useAsyncData } from '@/lib/utils/AsyncDataHelper';
 
 const Index = () => {
-  const [dashboardData, setDashboardData] = useState<DashboardData | null>(null);
-  const [loading, setLoading] = useState(true);
-
-  useEffect(() => {
-    const fetchDashboardData = async () => {
-      try {
-        const data = await db.getDashboardData();
-        setDashboardData(data);
-      } catch (error) {
-        console.error("Error fetching dashboard data:", error);
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    fetchDashboardData();
-  }, []);
+  const { data: dashboardData, loading } = useAsyncData<DashboardData>(() => db.getDashboardData());
 
   const formatCurrency = (value: number) => {
     return new Intl.NumberFormat('pt-BR', {
@@ -39,7 +23,6 @@ const Index = () => {
     }).format(value);
   };
 
-  // Sample data for the chart
   const salesData = [
     { name: 'Jan', value: 4000 },
     { name: 'Fev', value: 3000 },

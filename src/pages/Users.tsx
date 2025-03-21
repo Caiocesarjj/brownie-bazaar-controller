@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/context/AuthContext';
@@ -107,7 +106,6 @@ const Users = () => {
   const [dialogOpen, setDialogOpen] = useState(false);
   const [userToEdit, setUserToEdit] = useState<User | null>(null);
   
-  // Redirecionar se não for admin
   useEffect(() => {
     if (!isAdmin) {
       navigate('/');
