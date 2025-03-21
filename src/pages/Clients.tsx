@@ -1,5 +1,5 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { db, Client } from '@/lib/database';
 import { 
@@ -13,9 +13,10 @@ import { toast } from '@/components/ui/use-toast';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import AddClientForm from '@/components/forms/AddClientForm';
+import { useAsyncData } from '@/lib/utils/AsyncDataHelper';
 
 const Clients = () => {
-  const [clients, setClients] = useState<Client[]>(db.getClients());
+  const { data: clients = [], loading, refetch: refreshClients } = useAsyncData<Client[]>(() => db.getClients());
   const [searchTerm, setSearchTerm] = useState('');
   const [isAddClientDialogOpen, setIsAddClientDialogOpen] = useState(false);
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
@@ -42,11 +43,11 @@ const Clients = () => {
     setIsDeleteDialogOpen(true);
   };
 
-  const handleDeleteClient = () => {
+  const handleDeleteClient = async () => {
     if (clientToDelete) {
       try {
-        db.deleteClient(clientToDelete.id);
-        setClients(db.getClients());
+        await db.deleteClient(clientToDelete.id);
+        await refreshClients();
         toast({
           title: "Cliente removido",
           description: `${clientToDelete.name} foi removido com sucesso.`,
@@ -63,10 +64,18 @@ const Clients = () => {
     }
   };
 
-  const handleFormSuccess = () => {
-    setClients(db.getClients());
+  const handleFormSuccess = async () => {
+    await refreshClients();
     setIsAddClientDialogOpen(false);
   };
+
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-background to-secondary/30 py-10 px-6 flex justify-center items-center">
+        <p>Carregando clientes...</p>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-background to-secondary/30 py-10 px-6">

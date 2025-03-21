@@ -1,5 +1,5 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { db, Expense } from '@/lib/database';
 import {
@@ -33,10 +33,31 @@ import {
 import { toast } from '@/components/ui/use-toast';
 
 const Expenses = () => {
-  const [expenses, setExpenses] = useState<Expense[]>(() => db.getExpenses());
+  const [expenses, setExpenses] = useState<Expense[]>([]);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [selectedExpense, setSelectedExpense] = useState<Expense | null>(null);
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const fetchExpenses = async () => {
+      try {
+        const data = await db.getExpenses();
+        setExpenses(data);
+      } catch (error) {
+        console.error("Error fetching expenses:", error);
+        toast({
+          title: "Erro ao carregar despesas",
+          description: "Não foi possível carregar as despesas.",
+          variant: "destructive"
+        });
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchExpenses();
+  }, []);
 
   const formatCurrency = (value: number) => {
     return new Intl.NumberFormat('pt-BR', {
@@ -64,22 +85,44 @@ const Expenses = () => {
     setIsDeleteDialogOpen(true);
   };
 
-  const handleDeleteConfirm = () => {
+  const handleDeleteConfirm = async () => {
     if (selectedExpense) {
-      db.deleteExpense(selectedExpense.id);
-      setExpenses(db.getExpenses());
-      toast({
-        title: "Despesa excluída",
-        description: `${selectedExpense.itemName} foi excluído com sucesso.`,
-      });
-      setIsDeleteDialogOpen(false);
+      try {
+        await db.deleteExpense(selectedExpense.id);
+        const updatedExpenses = await db.getExpenses();
+        setExpenses(updatedExpenses);
+        toast({
+          title: "Despesa excluída",
+          description: `${selectedExpense.itemName} foi excluído com sucesso.`,
+        });
+        setIsDeleteDialogOpen(false);
+      } catch (error) {
+        toast({
+          title: "Erro ao excluir despesa",
+          description: "Não foi possível excluir a despesa.",
+          variant: "destructive"
+        });
+      }
     }
   };
 
-  const refreshExpenses = () => {
-    setExpenses(db.getExpenses());
-    setIsDialogOpen(false);
+  const refreshExpenses = async () => {
+    try {
+      const data = await db.getExpenses();
+      setExpenses(data);
+      setIsDialogOpen(false);
+    } catch (error) {
+      console.error("Error refreshing expenses:", error);
+    }
   };
+
+  if (loading) {
+    return (
+      <div className="container mx-auto py-10 px-4 flex justify-center items-center min-h-[60vh]">
+        <p>Carregando despesas...</p>
+      </div>
+    );
+  }
 
   return (
     <div className="container mx-auto py-10 px-4">

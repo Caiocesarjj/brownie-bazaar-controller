@@ -13,9 +13,10 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '
 import { toast } from '@/components/ui/use-toast';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
+import { useAsyncData } from '@/lib/utils/AsyncDataHelper';
 
 const Resellers = () => {
-  const [resellers, setResellers] = useState<Reseller[]>(db.getResellers());
+  const { data: resellers = [], loading, refetch: refreshResellers } = useAsyncData<Reseller[]>(() => db.getResellers());
   const [searchTerm, setSearchTerm] = useState('');
   const [isAddResellerDialogOpen, setIsAddResellerDialogOpen] = useState(false);
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
@@ -88,7 +89,7 @@ const Resellers = () => {
     return Object.keys(newErrors).length === 0;
   };
 
-  const handleSubmit = () => {
+  const handleSubmit = async () => {
     if (!validateForm()) return;
     
     try {
@@ -96,24 +97,24 @@ const Resellers = () => {
       
       if (isEditMode && currentReseller) {
         // Update existing reseller
-        db.updateReseller(currentReseller.id, { 
+        await db.updateReseller(currentReseller.id, { 
           name, 
           phone,
           commission: commissionValue 
         });
-        setResellers(db.getResellers());
+        await refreshResellers();
         toast({
           title: "Revendedor atualizado",
           description: `${name} foi atualizado com sucesso.`,
         });
       } else {
         // Add new reseller
-        db.addReseller({ 
+        await db.addReseller({ 
           name, 
           phone,
           commission: commissionValue 
         });
-        setResellers(db.getResellers());
+        await refreshResellers();
         toast({
           title: "Revendedor adicionado",
           description: `${name} foi adicionado com sucesso.`,
@@ -131,11 +132,11 @@ const Resellers = () => {
     }
   };
 
-  const handleDeleteReseller = () => {
+  const handleDeleteReseller = async () => {
     if (resellerToDelete) {
       try {
-        db.deleteReseller(resellerToDelete.id);
-        setResellers(db.getResellers());
+        await db.deleteReseller(resellerToDelete.id);
+        await refreshResellers();
         toast({
           title: "Revendedor removido",
           description: `${resellerToDelete.name} foi removido com sucesso.`,
@@ -151,6 +152,14 @@ const Resellers = () => {
       }
     }
   };
+
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-background to-secondary/30 py-10 px-6 flex justify-center items-center">
+        <p>Carregando revendedores...</p>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-background to-secondary/30 py-10 px-6">

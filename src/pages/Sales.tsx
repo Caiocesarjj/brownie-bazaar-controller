@@ -4,7 +4,7 @@ import { motion } from 'framer-motion';
 import { db, Sale, Client, Reseller, Product } from '@/lib/database';
 import { 
   Search, Plus, Trash2, FileText, ChevronLeft, ChevronRight, 
-  ShoppingBag, CheckCircle, XCircle, DollarSign, Calendar, ChevronDown
+  ShoppingBag, CheckCircle, XCircle, DollarSign, Calendar
 } from 'lucide-react';
 import GlassCard from '@/components/common/GlassCard';
 import { Button } from '@/components/ui/button';
@@ -13,6 +13,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { toast } from '@/components/ui/use-toast';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
+import { useAsyncData } from '@/lib/utils/AsyncDataHelper';
 
 const formatCurrency = (value: number) => {
   return new Intl.NumberFormat('pt-BR', {
@@ -30,10 +31,11 @@ interface SaleItem {
 }
 
 const Sales = () => {
-  const [sales, setSales] = useState<Sale[]>(db.getSales());
-  const [clients, setClients] = useState<Client[]>(db.getClients());
-  const [resellers, setResellers] = useState<Reseller[]>(db.getResellers());
-  const [products, setProducts] = useState<Product[]>(db.getProducts());
+  const { data: sales = [], loading: loadingSales, refetch: refreshSales } = useAsyncData<Sale[]>(() => db.getSales());
+  const { data: clients = [], loading: loadingClients } = useAsyncData<Client[]>(() => db.getClients());
+  const { data: resellers = [], loading: loadingResellers } = useAsyncData<Reseller[]>(() => db.getResellers());
+  const { data: products = [], loading: loadingProducts, refetch: refreshProducts } = useAsyncData<Product[]>(() => db.getProducts());
+  
   const [searchTerm, setSearchTerm] = useState('');
   const [isAddSaleDialogOpen, setIsAddSaleDialogOpen] = useState(false);
   const [isSaleDetailsDialogOpen, setIsSaleDetailsDialogOpen] = useState(false);
@@ -46,6 +48,8 @@ const Sales = () => {
   const [currentProductId, setCurrentProductId] = useState("");
   const [currentQuantity, setCurrentQuantity] = useState(1);
   const [errors, setErrors] = useState<Record<string, string>>({});
+
+  const loading = loadingSales || loadingClients || loadingResellers || loadingProducts;
 
   const filteredSales = sales.filter(sale => 
     sale.clientName.toLowerCase().includes(searchTerm.toLowerCase()) || 
@@ -136,7 +140,7 @@ const Sales = () => {
     setSaleItems(saleItems.filter((_, i) => i !== index));
   };
 
-  const handleSubmitSale = () => {
+  const handleSubmitSale = async () => {
     // Validate form
     const newErrors: Record<string, string> = {};
     
@@ -190,9 +194,9 @@ const Sales = () => {
         date: new Date()
       };
       
-      db.addSale(newSale);
-      setSales(db.getSales());
-      setProducts(db.getProducts()); // Update products after inventory change
+      await db.addSale(newSale);
+      await refreshSales();
+      await refreshProducts(); // Update products after inventory change
       
       toast({
         title: "Venda registrada",
@@ -212,6 +216,14 @@ const Sales = () => {
 
   // Filter available products (with stock)
   const availableProducts = products.filter(product => product.quantity > 0);
+
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-background to-secondary/30 py-10 px-6 flex justify-center items-center">
+        <p>Carregando dados...</p>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-background to-secondary/30 py-10 px-6">

@@ -13,9 +13,10 @@ import { toast } from '@/components/ui/use-toast';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import AddProductForm from '@/components/forms/AddProductForm';
+import { useAsyncData } from '@/lib/utils/AsyncDataHelper';
 
 const Inventory = () => {
-  const [products, setProducts] = useState<Product[]>(db.getProducts());
+  const { data: products = [], loading, refetch: refreshProducts } = useAsyncData<Product[]>(() => db.getProducts());
   const [searchTerm, setSearchTerm] = useState('');
   const [isAddProductDialogOpen, setIsAddProductDialogOpen] = useState(false);
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
@@ -41,11 +42,11 @@ const Inventory = () => {
     setIsDeleteDialogOpen(true);
   };
 
-  const handleDeleteProduct = () => {
+  const handleDeleteProduct = async () => {
     if (productToDelete) {
       try {
-        db.deleteProduct(productToDelete.id);
-        setProducts(db.getProducts());
+        await db.deleteProduct(productToDelete.id);
+        await refreshProducts();
         toast({
           title: "Produto removido",
           description: `${productToDelete.name} foi removido com sucesso.`,
@@ -62,8 +63,8 @@ const Inventory = () => {
     }
   };
 
-  const handleFormSuccess = () => {
-    setProducts(db.getProducts());
+  const handleFormSuccess = async () => {
+    await refreshProducts();
     setIsAddProductDialogOpen(false);
   };
 
@@ -82,6 +83,14 @@ const Inventory = () => {
       profitMargin
     };
   };
+
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-background to-secondary/30 py-10 px-6 flex justify-center items-center">
+        <p>Carregando produtos...</p>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-background to-secondary/30 py-10 px-6">

@@ -9,7 +9,7 @@ import {
   DialogHeader, 
   DialogTitle 
 } from '@/components/ui/dialog';
-import { FilePdf, FileSpreadsheet, Calendar, Filter } from 'lucide-react';
+import { FileText, FileSpreadsheet, Calendar, Filter } from 'lucide-react';
 import { 
   Select, 
   SelectContent, 
@@ -88,7 +88,7 @@ const ReportExport: React.FC<ReportExportProps> = ({
         onClick={() => setOpen(true)} 
         className="gap-2"
       >
-        <FilePdf className="h-4 w-4" />
+        <FileText className="h-4 w-4" />
         Exportar Relatório
       </Button>
       
@@ -134,7 +134,7 @@ const ReportExport: React.FC<ReportExportProps> = ({
                   className="flex-1 gap-2"
                   onClick={() => setReportFormat('pdf')}
                 >
-                  <FilePdf className="h-4 w-4" />
+                  <FileText className="h-4 w-4" />
                   PDF
                 </Button>
                 <Button

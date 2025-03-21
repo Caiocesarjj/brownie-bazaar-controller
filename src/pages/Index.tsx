@@ -1,5 +1,5 @@
 
-import React, { useEffect } from 'react';
+import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import DashboardCard from '@/components/dashboard/DashboardCard';
 import { db } from '@/lib/database';
@@ -11,9 +11,26 @@ import RecentSales from '@/components/dashboard/RecentSales';
 import StockStatus from '@/components/dashboard/StockStatus';
 import ExpenseSummary from '@/components/dashboard/ExpenseSummary';
 import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
+import { DashboardData } from '@/lib/database/models';
 
 const Index = () => {
-  const [dashboardData, setDashboardData] = React.useState(() => db.getDashboardData());
+  const [dashboardData, setDashboardData] = useState<DashboardData | null>(null);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const fetchDashboardData = async () => {
+      try {
+        const data = await db.getDashboardData();
+        setDashboardData(data);
+      } catch (error) {
+        console.error("Error fetching dashboard data:", error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchDashboardData();
+  }, []);
 
   const formatCurrency = (value: number) => {
     return new Intl.NumberFormat('pt-BR', {
@@ -32,6 +49,22 @@ const Index = () => {
     { name: 'Jun', value: 2390 },
     { name: 'Jul', value: 3490 },
   ];
+
+  if (loading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <p>Carregando dados do dashboard...</p>
+      </div>
+    );
+  }
+
+  if (!dashboardData) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <p>Erro ao carregar dados. Por favor, tente novamente.</p>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-background to-secondary/30 py-10 px-6">

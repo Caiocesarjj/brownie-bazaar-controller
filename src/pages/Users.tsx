@@ -1,5 +1,5 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/context/AuthContext';
 import { db, User } from '@/lib/database';
@@ -9,6 +9,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { useToast } from '@/components/ui/use-toast';
 import { Plus, Trash, UserRound, Edit } from 'lucide-react';
+import { useAsyncData } from '@/lib/utils/AsyncDataHelper';
 
 const UserDialog = ({ 
   open, 
@@ -102,24 +103,32 @@ const Users = () => {
   const { isAdmin } = useAuth();
   const navigate = useNavigate();
   const { toast } = useToast();
+  const { data: users = [], loading, refetch: refreshUsers } = useAsyncData<User[]>(() => db.getUsers());
   const [dialogOpen, setDialogOpen] = useState(false);
   const [userToEdit, setUserToEdit] = useState<User | null>(null);
-  const [users, setUsers] = useState<User[]>(db.getUsers());
   
   // Redirecionar se não for admin
-  React.useEffect(() => {
+  useEffect(() => {
     if (!isAdmin) {
       navigate('/');
     }
   }, [isAdmin, navigate]);
   
-  const handleDeleteUser = (userId: string) => {
-    const deleted = db.deleteUser(userId);
-    if (deleted) {
-      setUsers(db.getUsers());
+  const handleDeleteUser = async (userId: string) => {
+    try {
+      const deleted = await db.deleteUser(userId);
+      if (deleted) {
+        await refreshUsers();
+        toast({
+          title: "Usuário removido",
+          description: "O usuário foi excluído com sucesso.",
+        });
+      }
+    } catch (error) {
       toast({
-        title: "Usuário removido",
-        description: "O usuário foi excluído com sucesso.",
+        title: "Erro",
+        description: "Ocorreu um erro ao remover o usuário.",
+        variant: "destructive",
       });
     }
   };
@@ -134,22 +143,22 @@ const Users = () => {
     setDialogOpen(true);
   };
   
-  const handleSaveUser = (userData: Omit<User, 'id' | 'createdAt'>) => {
+  const handleSaveUser = async (userData: Omit<User, 'id' | 'createdAt'>) => {
     try {
       if (userToEdit) {
-        db.updateUser(userToEdit.id, userData);
+        await db.updateUser(userToEdit.id, userData);
         toast({
           title: "Usuário atualizado",
           description: `${userData.name} foi atualizado com sucesso.`,
         });
       } else {
-        db.addUser(userData);
+        await db.addUser(userData);
         toast({
           title: "Usuário adicionado",
           description: `${userData.name} foi adicionado com sucesso.`,
         });
       }
-      setUsers(db.getUsers());
+      await refreshUsers();
     } catch (error) {
       toast({
         title: "Erro",
@@ -161,6 +170,14 @@ const Users = () => {
   
   if (!isAdmin) {
     return null;
+  }
+
+  if (loading) {
+    return (
+      <div className="container max-w-5xl py-8 flex justify-center items-center min-h-[60vh]">
+        <p>Carregando usuários...</p>
+      </div>
+    );
   }
 
   return (
