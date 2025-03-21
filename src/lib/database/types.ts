@@ -1,5 +1,5 @@
 
-// Define os tipos usados no banco de dados
+// Tipos para entidades do banco de dados
 export interface Client {
   id: string;
   name: string;
@@ -53,57 +53,73 @@ export interface Expense {
 export interface User {
   id: string;
   username: string;
-  password: string; // Na implementação real, seria um hash
+  password: string; // Na vida real, isso seria um hash, não senha em texto puro
   name: string;
   role: 'admin' | 'user';
   createdAt: Date;
 }
 
+// Tipo para o resultado do Dashboard
+export interface DashboardData {
+  totalSales: number;
+  totalRevenue: number;
+  totalClients: number;
+  totalResellers: number;
+  monthlyRevenue: number;
+  monthlySales: number;
+  monthlyExpensesTotal: number;
+  monthlyProfit: number;
+  lowStockProducts: Product[];
+  topProducts: { id: string; name: string; quantity: number }[];
+  topResellers: { id: string; name: string; total: number }[];
+  recentSales: Sale[];
+  recentExpenses: Expense[];
+}
+
 // Interface para o provedor de banco de dados
+// Todas as operações são promessas para permitir integrações assíncronas (HTTP API, etc.)
 export interface DatabaseProvider {
   // Clientes
-  getClients(): Client[];
-  getClient(id: string): Client | undefined;
-  addClient(client: Omit<Client, 'id' | 'createdAt'>): Client;
-  updateClient(id: string, data: Partial<Omit<Client, 'id' | 'createdAt'>>): Client | null;
-  deleteClient(id: string): Client | null;
+  getClients(): Promise<Client[]>;
+  getClient(id: string): Promise<Client | null>;
+  addClient(client: Omit<Client, 'id' | 'createdAt'>): Promise<Client>;
+  updateClient(id: string, data: Partial<Omit<Client, 'id' | 'createdAt'>>): Promise<Client | null>;
+  deleteClient(id: string): Promise<Client | null>;
 
   // Revendedores
-  getResellers(): Reseller[];
-  getReseller(id: string): Reseller | undefined;
-  addReseller(reseller: Omit<Reseller, 'id' | 'createdAt'>): Reseller;
-  updateReseller(id: string, data: Partial<Omit<Reseller, 'id' | 'createdAt'>>): Reseller | null;
-  deleteReseller(id: string): Reseller | null;
+  getResellers(): Promise<Reseller[]>;
+  getReseller(id: string): Promise<Reseller | null>;
+  addReseller(reseller: Omit<Reseller, 'id' | 'createdAt'>): Promise<Reseller>;
+  updateReseller(id: string, data: Partial<Omit<Reseller, 'id' | 'createdAt'>>): Promise<Reseller | null>;
+  deleteReseller(id: string): Promise<Reseller | null>;
 
   // Produtos
-  getProducts(): Product[];
-  getProduct(id: string): Product | undefined;
-  addProduct(product: Omit<Product, 'id' | 'createdAt'>): Product;
-  updateProduct(id: string, data: Partial<Omit<Product, 'id' | 'createdAt'>>): Product | null;
-  deleteProduct(id: string): Product | null;
+  getProducts(): Promise<Product[]>;
+  getProduct(id: string): Promise<Product | null>;
+  addProduct(product: Omit<Product, 'id' | 'createdAt'>): Promise<Product>;
+  updateProduct(id: string, data: Partial<Omit<Product, 'id' | 'createdAt'>>): Promise<Product | null>;
+  deleteProduct(id: string): Promise<Product | null>;
 
   // Vendas
-  getSales(): Sale[];
-  getSale(id: string): Sale | undefined;
-  addSale(sale: Omit<Sale, 'id'>): Sale;
+  getSales(): Promise<Sale[]>;
+  getSale(id: string): Promise<Sale | null>;
+  addSale(sale: Omit<Sale, 'id'>): Promise<Sale>;
 
   // Despesas
-  getExpenses(): Expense[];
-  getExpense(id: string): Expense | undefined;
-  addExpense(expense: Omit<Expense, 'id'>): Expense;
-  updateExpense(id: string, data: Partial<Omit<Expense, 'id'>>): Expense | null;
-  deleteExpense(id: string): Expense | null;
+  getExpenses(): Promise<Expense[]>;
+  getExpense(id: string): Promise<Expense | null>;
+  addExpense(expense: Omit<Expense, 'id'>): Promise<Expense>;
+  updateExpense(id: string, data: Partial<Omit<Expense, 'id'>>): Promise<Expense | null>;
+  deleteExpense(id: string): Promise<Expense | null>;
 
-  // Autenticação
-  authenticateUser(username: string, password: string): User | null;
+  // Autenticação e usuários
+  authenticateUser(username: string, password: string): Promise<User | null>;
+  getUsers(): Promise<User[]>;
+  getUser(id: string): Promise<User | null>;
+  addUser(user: Omit<User, 'id' | 'createdAt'>): Promise<User>;
+  updateUser(id: string, data: Partial<Omit<User, 'id' | 'createdAt'>>): Promise<User | null>;
+  deleteUser(id: string): Promise<User | null>;
 
-  // Usuários
-  getUsers(): User[];
-  getUser(id: string): User | undefined;
-  addUser(user: Omit<User, 'id' | 'createdAt'>): User;
-  updateUser(id: string, data: Partial<Omit<User, 'id' | 'createdAt'>>): User | null;
-  deleteUser(id: string): User | null;
-
-  // Dados do Dashboard
-  getDashboardData(): any;
+  // Dashboard
+  getDashboardData(): Promise<DashboardData>;
 }

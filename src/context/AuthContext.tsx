@@ -1,6 +1,7 @@
 
 import React, { createContext, useContext, useState, useEffect } from 'react';
-import { db, User } from '@/lib/database';
+import { User } from '@/lib/database/types';
+import { UserAPI } from '@/lib/database/models';
 
 type AuthContextType = {
   user: User | null;
@@ -26,21 +27,21 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   }, []);
 
   const login = async (username: string, password: string): Promise<boolean> => {
-    // Simular uma chamada de API com atraso
-    return new Promise((resolve) => {
-      setTimeout(() => {
-        const authenticatedUser = db.authenticateUser(username, password);
-        
-        if (authenticatedUser) {
-          setUser(authenticatedUser);
-          setIsAdmin(authenticatedUser.role === 'admin');
-          localStorage.setItem('user', JSON.stringify(authenticatedUser));
-          resolve(true);
-        } else {
-          resolve(false);
-        }
-      }, 500); // Simulação de delay de rede
-    });
+    try {
+      const authenticatedUser = await UserAPI.authenticate(username, password);
+      
+      if (authenticatedUser) {
+        setUser(authenticatedUser);
+        setIsAdmin(authenticatedUser.role === 'admin');
+        localStorage.setItem('user', JSON.stringify(authenticatedUser));
+        return true;
+      } else {
+        return false;
+      }
+    } catch (error) {
+      console.error("Erro ao fazer login:", error);
+      return false;
+    }
   };
 
   const logout = () => {

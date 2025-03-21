@@ -7,7 +7,7 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { toast } from '@/components/ui/use-toast';
 import { Database, Server } from 'lucide-react';
-import { setDatabaseProvider } from '@/lib/database';
+import { setDatabaseProvider } from '@/lib/database/index';
 
 const DatabaseSettings = () => {
   const [dbProvider, setDbProvider] = useState<'memory' | 'http'>(

@@ -1,6 +1,6 @@
 
 import { 
-  Client, DatabaseProvider, Expense, Product, Reseller, Sale, User
+  Client, DatabaseProvider, Expense, Product, Reseller, Sale, User, DashboardData
 } from './types';
 
 /**
@@ -278,7 +278,7 @@ export class HttpDatabase implements DatabaseProvider {
   }
   
   // Dados do dashboard
-  async getDashboardData() {
-    return this.fetchApi('dashboard');
+  async getDashboardData(): Promise<DashboardData> {
+    return this.fetchApi<DashboardData>('dashboard');
   }
 }

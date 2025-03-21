@@ -10,7 +10,7 @@ export * from './types';
 let databaseProvider: DatabaseProvider;
 
 // Inicializar o provedor de banco de dados baseado em configuração
-function initializeDatabase() {
+function initializeDatabase(): DatabaseProvider {
   // Verificar qual provedor de banco de dados deve ser usado
   const dbProvider = localStorage.getItem('dbProvider') || 'memory';
   
@@ -26,7 +26,7 @@ function initializeDatabase() {
 }
 
 // Garantir que temos apenas uma instância
-export function getDatabaseProvider() {
+export function getDatabaseProvider(): DatabaseProvider {
   if (!databaseProvider) {
     databaseProvider = initializeDatabase();
   }
@@ -34,7 +34,7 @@ export function getDatabaseProvider() {
 }
 
 // Permitir mudar o provedor de banco de dados em tempo de execução
-export function setDatabaseProvider(provider: 'memory' | 'http', config?: { apiUrl?: string }) {
+export function setDatabaseProvider(provider: 'memory' | 'http', config?: { apiUrl?: string }): DatabaseProvider {
   localStorage.setItem('dbProvider', provider);
   
   if (provider === 'http' && config?.apiUrl) {

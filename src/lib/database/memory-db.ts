@@ -1,6 +1,6 @@
 
 import { 
-  Client, Reseller, Product, Sale, Expense, User, DatabaseProvider 
+  Client, Reseller, Product, Sale, Expense, User, DatabaseProvider, DashboardData
 } from './types';
 
 // Dados mockados
@@ -157,15 +157,15 @@ const users: User[] = [
 // Implementação do banco de dados em memória
 export class MemoryDatabase implements DatabaseProvider {
   // Clientes
-  getClients() {
+  async getClients(): Promise<Client[]> {
     return [...clients];
   }
 
-  getClient(id: string) {
-    return clients.find(client => client.id === id);
+  async getClient(id: string): Promise<Client | null> {
+    return clients.find(client => client.id === id) || null;
   }
 
-  addClient(client: Omit<Client, 'id' | 'createdAt'>) {
+  async addClient(client: Omit<Client, 'id' | 'createdAt'>): Promise<Client> {
     const newClient = {
       ...client,
       id: (clients.length + 1).toString(),
@@ -175,7 +175,7 @@ export class MemoryDatabase implements DatabaseProvider {
     return newClient;
   }
 
-  updateClient(id: string, data: Partial<Omit<Client, 'id' | 'createdAt'>>) {
+  async updateClient(id: string, data: Partial<Omit<Client, 'id' | 'createdAt'>>): Promise<Client | null> {
     const index = clients.findIndex(client => client.id === id);
     if (index >= 0) {
       clients[index] = { ...clients[index], ...data };
@@ -184,7 +184,7 @@ export class MemoryDatabase implements DatabaseProvider {
     return null;
   }
 
-  deleteClient(id: string) {
+  async deleteClient(id: string): Promise<Client | null> {
     const index = clients.findIndex(client => client.id === id);
     if (index >= 0) {
       const deletedClient = clients[index];
@@ -195,15 +195,15 @@ export class MemoryDatabase implements DatabaseProvider {
   }
 
   // Revendedores
-  getResellers() {
+  async getResellers(): Promise<Reseller[]> {
     return [...resellers];
   }
 
-  getReseller(id: string) {
-    return resellers.find(reseller => reseller.id === id);
+  async getReseller(id: string): Promise<Reseller | null> {
+    return resellers.find(reseller => reseller.id === id) || null;
   }
 
-  addReseller(reseller: Omit<Reseller, 'id' | 'createdAt'>) {
+  async addReseller(reseller: Omit<Reseller, 'id' | 'createdAt'>): Promise<Reseller> {
     const newReseller = {
       ...reseller,
       id: (resellers.length + 1).toString(),
@@ -213,7 +213,7 @@ export class MemoryDatabase implements DatabaseProvider {
     return newReseller;
   }
 
-  updateReseller(id: string, data: Partial<Omit<Reseller, 'id' | 'createdAt'>>) {
+  async updateReseller(id: string, data: Partial<Omit<Reseller, 'id' | 'createdAt'>>): Promise<Reseller | null> {
     const index = resellers.findIndex(reseller => reseller.id === id);
     if (index >= 0) {
       resellers[index] = { ...resellers[index], ...data };
@@ -222,7 +222,7 @@ export class MemoryDatabase implements DatabaseProvider {
     return null;
   }
 
-  deleteReseller(id: string) {
+  async deleteReseller(id: string): Promise<Reseller | null> {
     const index = resellers.findIndex(reseller => reseller.id === id);
     if (index >= 0) {
       const deletedReseller = resellers[index];
@@ -233,15 +233,15 @@ export class MemoryDatabase implements DatabaseProvider {
   }
 
   // Produtos
-  getProducts() {
+  async getProducts(): Promise<Product[]> {
     return [...products];
   }
 
-  getProduct(id: string) {
-    return products.find(product => product.id === id);
+  async getProduct(id: string): Promise<Product | null> {
+    return products.find(product => product.id === id) || null;
   }
 
-  addProduct(product: Omit<Product, 'id' | 'createdAt'>) {
+  async addProduct(product: Omit<Product, 'id' | 'createdAt'>): Promise<Product> {
     const newProduct = {
       ...product,
       id: (products.length + 1).toString(),
@@ -251,7 +251,7 @@ export class MemoryDatabase implements DatabaseProvider {
     return newProduct;
   }
 
-  updateProduct(id: string, data: Partial<Omit<Product, 'id' | 'createdAt'>>) {
+  async updateProduct(id: string, data: Partial<Omit<Product, 'id' | 'createdAt'>>): Promise<Product | null> {
     const index = products.findIndex(product => product.id === id);
     if (index >= 0) {
       products[index] = { ...products[index], ...data };
@@ -260,7 +260,7 @@ export class MemoryDatabase implements DatabaseProvider {
     return null;
   }
 
-  deleteProduct(id: string) {
+  async deleteProduct(id: string): Promise<Product | null> {
     const index = products.findIndex(product => product.id === id);
     if (index >= 0) {
       const deletedProduct = products[index];
@@ -271,15 +271,15 @@ export class MemoryDatabase implements DatabaseProvider {
   }
 
   // Vendas
-  getSales() {
+  async getSales(): Promise<Sale[]> {
     return [...sales];
   }
 
-  getSale(id: string) {
-    return sales.find(sale => sale.id === id);
+  async getSale(id: string): Promise<Sale | null> {
+    return sales.find(sale => sale.id === id) || null;
   }
 
-  addSale(sale: Omit<Sale, 'id'>) {
+  async addSale(sale: Omit<Sale, 'id'>): Promise<Sale> {
     // Atualizar estoque
     sale.items.forEach(item => {
       const productIndex = products.findIndex(p => p.id === item.productId);
@@ -297,15 +297,15 @@ export class MemoryDatabase implements DatabaseProvider {
   }
   
   // Despesas
-  getExpenses() {
+  async getExpenses(): Promise<Expense[]> {
     return [...expenses];
   }
 
-  getExpense(id: string) {
-    return expenses.find(expense => expense.id === id);
+  async getExpense(id: string): Promise<Expense | null> {
+    return expenses.find(expense => expense.id === id) || null;
   }
 
-  addExpense(expense: Omit<Expense, 'id'>) {
+  async addExpense(expense: Omit<Expense, 'id'>): Promise<Expense> {
     const newExpense = {
       ...expense,
       id: (expenses.length + 1).toString()
@@ -314,7 +314,7 @@ export class MemoryDatabase implements DatabaseProvider {
     return newExpense;
   }
 
-  updateExpense(id: string, data: Partial<Omit<Expense, 'id'>>) {
+  async updateExpense(id: string, data: Partial<Omit<Expense, 'id'>>): Promise<Expense | null> {
     const index = expenses.findIndex(expense => expense.id === id);
     if (index >= 0) {
       expenses[index] = { ...expenses[index], ...data };
@@ -323,7 +323,7 @@ export class MemoryDatabase implements DatabaseProvider {
     return null;
   }
 
-  deleteExpense(id: string) {
+  async deleteExpense(id: string): Promise<Expense | null> {
     const index = expenses.findIndex(expense => expense.id === id);
     if (index >= 0) {
       const deletedExpense = expenses[index];
@@ -334,21 +334,21 @@ export class MemoryDatabase implements DatabaseProvider {
   }
   
   // Autenticação
-  authenticateUser(username: string, password: string) {
+  async authenticateUser(username: string, password: string): Promise<User | null> {
     const user = users.find(u => u.username === username && u.password === password);
     return user || null;
   }
   
   // Usuários
-  getUsers() {
+  async getUsers(): Promise<User[]> {
     return [...users].filter(u => u.role !== 'admin'); // Não expor usuários admin
   }
 
-  getUser(id: string) {
-    return users.find(user => user.id === id);
+  async getUser(id: string): Promise<User | null> {
+    return users.find(user => user.id === id) || null;
   }
 
-  addUser(user: Omit<User, 'id' | 'createdAt'>) {
+  async addUser(user: Omit<User, 'id' | 'createdAt'>): Promise<User> {
     const newUser = {
       ...user,
       id: (users.length + 1).toString(),
@@ -358,7 +358,7 @@ export class MemoryDatabase implements DatabaseProvider {
     return newUser;
   }
 
-  updateUser(id: string, data: Partial<Omit<User, 'id' | 'createdAt'>>) {
+  async updateUser(id: string, data: Partial<Omit<User, 'id' | 'createdAt'>>): Promise<User | null> {
     const index = users.findIndex(user => user.id === id);
     if (index >= 0) {
       users[index] = { ...users[index], ...data };
@@ -367,7 +367,7 @@ export class MemoryDatabase implements DatabaseProvider {
     return null;
   }
 
-  deleteUser(id: string) {
+  async deleteUser(id: string): Promise<User | null> {
     const index = users.findIndex(user => user.id === id);
     if (index >= 0) {
       const deletedUser = users[index];
@@ -378,7 +378,7 @@ export class MemoryDatabase implements DatabaseProvider {
   }
   
   // Dados do Dashboard
-  getDashboardData() {
+  async getDashboardData(): Promise<DashboardData> {
     const today = new Date();
     const currentMonth = today.getMonth();
     const currentYear = today.getFullYear();
