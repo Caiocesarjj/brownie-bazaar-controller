@@ -4,34 +4,69 @@ import {
 } from './types';
 
 /**
- * Implementação do provedor de banco de dados que se comunica com uma API HTTP.
- * Esta classe pode ser usada como base para integração com uma API C#.
+ * Implementação do provedor de banco de dados que se comunica com uma API C#.
+ * Esta classe se conecta a uma API ASP.NET Core e gerencia autenticação via JWT.
  */
 export class HttpDatabase implements DatabaseProvider {
   private apiUrl: string;
+  private authToken: string | null = null;
   
   constructor(apiUrl: string = 'http://localhost:5000/api') {
     this.apiUrl = apiUrl;
+    // Tentar recuperar token salvo
+    this.authToken = localStorage.getItem('authToken');
   }
   
+  /**
+   * Define o token de autenticação para requisições futuras
+   */
+  public setAuthToken(token: string | null): void {
+    this.authToken = token;
+    if (token) {
+      localStorage.setItem('authToken', token);
+    } else {
+      localStorage.removeItem('authToken');
+    }
+  }
+  
+  /**
+   * Método genérico para fazer requisições HTTP para a API C#
+   */
   private async fetchApi<T>(endpoint: string, options: RequestInit = {}): Promise<T> {
     const url = `${this.apiUrl}/${endpoint}`;
     
+    const headers: HeadersInit = {
+      'Content-Type': 'application/json',
+      'Accept': 'application/json',
+    };
+    
+    // Adicionar token de autenticação se disponível
+    if (this.authToken) {
+      headers['Authorization'] = `Bearer ${this.authToken}`;
+    }
+    
     const defaultOptions: RequestInit = {
-      headers: {
-        'Content-Type': 'application/json',
-        'Accept': 'application/json',
-        // Aqui você adicionaria o token de autenticação quando implementar
-        // 'Authorization': `Bearer ${token}`,
-      },
+      headers,
       ...options
     };
     
     try {
       const response = await fetch(url, defaultOptions);
       
+      // Lidar com erros de autenticação
+      if (response.status === 401) {
+        this.setAuthToken(null);
+        throw new Error('Sessão expirada. Por favor, faça login novamente.');
+      }
+      
       if (!response.ok) {
-        throw new Error(`API respondeu com status: ${response.status}`);
+        // Tentar extrair mensagem de erro da API .NET
+        try {
+          const errorData = await response.json();
+          throw new Error(errorData.message || errorData.title || `API respondeu com status: ${response.status}`);
+        } catch (parseError) {
+          throw new Error(`API respondeu com status: ${response.status}`);
+        }
       }
       
       return await response.json() as T;
@@ -228,10 +263,17 @@ export class HttpDatabase implements DatabaseProvider {
   // Autenticação e gestão de usuários
   async authenticateUser(username: string, password: string): Promise<User | null> {
     try {
-      return await this.fetchApi<User>('auth/login', {
+      const response = await this.fetchApi<{ token: string; user: User }>('auth/login', {
         method: 'POST',
         body: JSON.stringify({ username, password })
       });
+      
+      // Armazenar token JWT para futuras requisições
+      if (response.token) {
+        this.setAuthToken(response.token);
+      }
+      
+      return response.user;
     } catch {
       return null;
     }
@@ -275,6 +317,33 @@ export class HttpDatabase implements DatabaseProvider {
     } catch {
       return null;
     }
+  }
+  
+  // Métodos para exportação de relatórios (integrados com backend C#)
+  async exportPdfReport(reportType: string, filters?: any): Promise<Blob> {
+    const queryParams = filters ? `?${new URLSearchParams(filters).toString()}` : '';
+    const response = await fetch(`${this.apiUrl}/reports/${reportType}/pdf${queryParams}`, {
+      headers: this.authToken ? { 'Authorization': `Bearer ${this.authToken}` } : {},
+    });
+    
+    if (!response.ok) {
+      throw new Error(`Falha ao gerar relatório PDF: ${response.statusText}`);
+    }
+    
+    return await response.blob();
+  }
+  
+  async exportExcelReport(reportType: string, filters?: any): Promise<Blob> {
+    const queryParams = filters ? `?${new URLSearchParams(filters).toString()}` : '';
+    const response = await fetch(`${this.apiUrl}/reports/${reportType}/excel${queryParams}`, {
+      headers: this.authToken ? { 'Authorization': `Bearer ${this.authToken}` } : {},
+    });
+    
+    if (!response.ok) {
+      throw new Error(`Falha ao gerar relatório Excel: ${response.statusText}`);
+    }
+    
+    return await response.blob();
   }
   
   // Dados do dashboard
